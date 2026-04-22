@@ -94,7 +94,7 @@ function AppNavigator() {
 // Reads isLoading from context — shows spinner until AsyncStorage hydration is done.
 // Also owns the AppState listener for Face ID auto-lock (Step 17).
 function RootNavigator({ navigationReadyRef, notificationQueueRef }) {
-  const { isLoading, cards, bills, settings } = useApp();
+  const { isLoading, cards, bills, settings, onboarded } = useApp();
   const wasInBackground = useRef(false);
   const [isLocked, setIsLocked] = useState(false);
 
@@ -136,8 +136,8 @@ function RootNavigator({ navigationReadyRef, notificationQueueRef }) {
     );
   }
 
-  // Show welcome/onboarding when the app has no data (first launch after startFresh)
-  if (cards.length === 0 && bills.length === 0) {
+  // Show welcome only on first ever launch — not after startFresh (onboarded=true)
+  if (!onboarded && cards.length === 0 && bills.length === 0) {
     return <WelcomeScreen />;
   }
 

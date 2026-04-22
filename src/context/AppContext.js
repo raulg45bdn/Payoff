@@ -19,6 +19,7 @@ const BILLS_KEY = '@payoff/bills';
 const SETTINGS_KEY = '@payoff/settings';
 const INITIALIZED_KEY = '@payoff/initialized';
 const SCHEMA_VERSION_KEY = '@payoff/schemaVersion';
+const ONBOARDED_KEY = '@payoff/onboarded';
 
 const SEC_INCOME_KEY = '@payoff/secure/income';
 const SEC_CHECKING_KEY = '@payoff/secure/checking';
@@ -191,6 +192,7 @@ export function AppProvider({ children }) {
   const [bills, setBills] = useState([]);
   const [settings, setSettings] = useState(SEED_SETTINGS);
   const [isLoading, setIsLoading] = useState(true);
+  const [onboarded, setOnboarded] = useState(false);
 
   // ── Modal dismiss registry (CLOSE_ALL_MODALS mechanism) ───────────────────
   const modalDismissCallbacks = useRef([]);
@@ -225,6 +227,7 @@ export function AppProvider({ children }) {
           setCards(seededCards);
           setBills(SEED_FIXED_BILLS);
           setSettings(SEED_SETTINGS);
+          setOnboarded(false);
         } else {
           const storedVersionRaw = await AsyncStorage.getItem(SCHEMA_VERSION_KEY);
           const storedVersion = storedVersionRaw ? parseInt(storedVersionRaw, 10) : 1;
@@ -316,6 +319,8 @@ export function AppProvider({ children }) {
           setCards(parsedCards.map(computeDerivedFields));
           setBills(parsedBills);
           setSettings(loadedSettings);
+          const onboardedVal = await AsyncStorage.getItem(ONBOARDED_KEY);
+          setOnboarded(!!onboardedVal);
         }
       } catch (e) {
         console.error('AppContext load error:', e);
@@ -517,12 +522,14 @@ export function AppProvider({ children }) {
       await cancelAllNotifications();
       await AsyncStorage.setItem(INITIALIZED_KEY, 'true');
       await AsyncStorage.setItem(SCHEMA_VERSION_KEY, String(CURRENT_SCHEMA_VERSION));
+      await AsyncStorage.setItem(ONBOARDED_KEY, 'true');
       await safeWrite(SETTINGS_KEY, defaultEmptySettings);
       await safeWrite(CARDS_KEY, []);
       await safeWrite(BILLS_KEY, []);
       setCards([]);
       setBills([]);
       setSettings(defaultEmptySettings);
+      setOnboarded(true);
     } catch (e) {
       console.error('startFresh error:', e);
     }
@@ -561,6 +568,7 @@ export function AppProvider({ children }) {
       bills,
       settings,
       isLoading,
+      onboarded,
       updateCard,
       addCard,
       removeCard,
