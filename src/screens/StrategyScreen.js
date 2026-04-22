@@ -28,13 +28,14 @@ export default function StrategyScreen({ navigation }) {
   }, [settings.extraPaymentPool, settings.cardOverrides]);
 
   // ── Cash position inline edit ───────────────────────────────────────────────
-  const [editingField, setEditingField] = useState(null); // 'checking' | 'savings' | null
+  const [editingField, setEditingField] = useState(null); // 'checking' | 'savings' | 'income' | null
   const [editText, setEditText] = useState('');
 
   function handleBalanceTap(field) {
-    const current = field === 'checking'
-      ? (settings.checkingBalance ?? 0)
-      : (settings.savingsBalance ?? 0);
+    let current;
+    if (field === 'checking') current = settings.checkingBalance ?? 0;
+    else if (field === 'savings') current = settings.savingsBalance ?? 0;
+    else current = settings.monthlyIncome ?? 0;
     setEditText(String(current));
     setEditingField(field);
   }
@@ -42,9 +43,10 @@ export default function StrategyScreen({ navigation }) {
   function handleBalanceBlur(field) {
     const parsed = parseFloat(editText);
     if (!isNaN(parsed) && parsed >= 0) {
-      updateSettings({
-        [field === 'checking' ? 'checkingBalance' : 'savingsBalance']: parsed,
-      });
+      const key = field === 'checking' ? 'checkingBalance'
+        : field === 'savings' ? 'savingsBalance'
+        : 'monthlyIncome';
+      updateSettings({ [key]: parsed });
     }
     setEditingField(null);
   }
@@ -211,9 +213,25 @@ export default function StrategyScreen({ navigation }) {
           {/* Income */}
           <View style={styles.flowRow}>
             <Text style={styles.flowLabel}>Monthly take-home</Text>
-            <Text style={[styles.flowValue, { color: Colors.textPrimary }]}>
-              +{formatCurrency(settings.monthlyIncome)}
-            </Text>
+            {editingField === 'income' ? (
+              <TextInput
+                style={styles.balanceInput}
+                value={editText}
+                onChangeText={setEditText}
+                keyboardType="decimal-pad"
+                autoFocus
+                selectTextOnFocus
+                onBlur={() => handleBalanceBlur('income')}
+                onSubmitEditing={() => handleBalanceBlur('income')}
+                returnKeyType="done"
+              />
+            ) : (
+              <TouchableOpacity onPress={() => handleBalanceTap('income')}>
+                <Text style={[styles.flowValue, { color: Colors.textPrimary, fontWeight: '600' }]}>
+                  +{formatCurrency(settings.monthlyIncome ?? 0)}
+                </Text>
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* Fixed bills */}

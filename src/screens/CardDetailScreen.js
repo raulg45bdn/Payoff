@@ -22,6 +22,7 @@ import {
   formatMonth,
 } from '../utils/calculations';
 import EditModal from '../components/EditModal';
+import EditCardModal from '../components/EditCardModal';
 import ProgressBar from '../components/ProgressBar';
 import { Colors, Typography } from '../theme';
 
@@ -29,6 +30,7 @@ export default function CardDetailScreen({ route, navigation }) {
   const { cardId } = route.params;
   const { cards, updateCard, removeCard } = useApp();
   const [modalVisible, setModalVisible] = useState(false);
+  const [editCardVisible, setEditCardVisible] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -393,6 +395,10 @@ export default function CardDetailScreen({ route, navigation }) {
           <Text style={styles.updateBtnText}>Update Balance</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.editBtn} onPress={() => setEditCardVisible(true)} activeOpacity={0.85}>
+          <Text style={styles.editBtnText}>Edit Card Details</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.85}>
           <Text style={styles.deleteBtnText}>Delete Card</Text>
         </TouchableOpacity>
@@ -404,6 +410,11 @@ export default function CardDetailScreen({ route, navigation }) {
         visible={modalVisible}
         card={card}
         onClose={() => setModalVisible(false)}
+      />
+      <EditCardModal
+        visible={editCardVisible}
+        card={card}
+        onClose={() => setEditCardVisible(false)}
       />
     </SafeAreaView>
   );
@@ -567,6 +578,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  editBtn: {
+    marginHorizontal: 16,
+    height: 52,
+    backgroundColor: Colors.bgCard,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  editBtnText: { fontSize: 17, fontWeight: '400', color: Colors.textPrimary },
   deleteBtn: {
     marginHorizontal: 16,
     height: 52,
