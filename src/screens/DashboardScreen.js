@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import {
   sortCardsByUrgency,
@@ -17,6 +18,8 @@ import AlertBanner from '../components/AlertBanner';
 import HeroCard from '../components/HeroCard';
 import ProgressBar from '../components/ProgressBar';
 import DebtCard from '../components/DebtCard';
+import AddCardModal from '../components/AddCardModal';
+import AddBillModal from '../components/AddBillModal';
 import { Colors, Typography } from '../theme';
 
 const VIEW_MODES = ['list', 'grid', 'compact'];
@@ -24,6 +27,8 @@ const VIEW_ICONS  = { list: '☰', grid: '⊞', compact: '≡' };
 
 export default function DashboardScreen({ navigation }) {
   const { cards, bills, settings, updateSettings } = useApp();
+  const [addCardVisible, setAddCardVisible] = useState(false);
+  const [addBillVisible, setAddBillVisible] = useState(false);
   const sortedCards = sortCardsByUrgency(cards);
   const overallProgress = getOverallProgress(cards);
   const viewMode = settings.dashboardBillsViewMode ?? 'list';
@@ -102,64 +107,81 @@ export default function DashboardScreen({ navigation }) {
             </View>
 
             {/* Bills Section */}
-            {sortedBills.length > 0 && (
-              <View style={styles.billsSection}>
-                {/* Section header with view mode toggle + collapse */}
-                <View style={styles.billsSectionHeader}>
-                  <View>
-                    <Text style={styles.sectionTitle}>Monthly bills</Text>
-                    <Text style={styles.billsSummary}>{paidCount}/{bills.length} paid</Text>
-                  </View>
-                  <View style={styles.billsHeaderRight}>
-                    {!billsCollapsed && (
-                      <TouchableOpacity style={styles.viewModeBtn} onPress={cycleViewMode}>
-                        <Text style={styles.viewModeIcon}>{VIEW_ICONS[viewMode]}</Text>
-                        <Text style={styles.viewModeLabel}>{viewMode}</Text>
-                      </TouchableOpacity>
-                    )}
+            <View style={styles.billsSection}>
+              <View style={styles.billsSectionHeader}>
+                <View>
+                  <Text style={styles.sectionTitle}>Monthly bills</Text>
+                  {bills.length > 0 && <Text style={styles.billsSummary}>{paidCount}/{bills.length} paid</Text>}
+                </View>
+                <View style={styles.billsHeaderRight}>
+                  {!billsCollapsed && bills.length > 0 && (
+                    <TouchableOpacity style={styles.viewModeBtn} onPress={cycleViewMode}>
+                      <Text style={styles.viewModeIcon}>{VIEW_ICONS[viewMode]}</Text>
+                      <Text style={styles.viewModeLabel}>{viewMode}</Text>
+                    </TouchableOpacity>
+                  )}
+                  <TouchableOpacity style={styles.addBtn} onPress={() => setAddBillVisible(true)}>
+                    <Text style={styles.addBtnText}>+</Text>
+                  </TouchableOpacity>
+                  {bills.length > 0 && (
                     <TouchableOpacity style={styles.collapseBtn} onPress={toggleCollapse}>
                       <Text style={styles.collapseIcon}>{billsCollapsed ? '▶' : '▼'}</Text>
                     </TouchableOpacity>
-                  </View>
+                  )}
                 </View>
-
-                {!billsCollapsed && viewMode === 'list' && (
-                  <View style={styles.billsList}>
-                    {sortedBills.map(bill => (
-                      <BillRowList key={bill.id} bill={bill} onPress={() => navToBill(bill.id)} />
-                    ))}
-                  </View>
-                )}
-
-                {!billsCollapsed && viewMode === 'grid' && (
-                  <View style={styles.billsGrid}>
-                    {sortedBills.map(bill => (
-                      <BillCardGrid key={bill.id} bill={bill} onPress={() => navToBill(bill.id)} />
-                    ))}
-                  </View>
-                )}
-
-                {!billsCollapsed && viewMode === 'compact' && (
-                  <View style={styles.billsCompact}>
-                    {sortedBills.map(bill => (
-                      <BillRowCompact key={bill.id} bill={bill} onPress={() => navToBill(bill.id)} />
-                    ))}
-                  </View>
-                )}
               </View>
-            )}
+
+              {bills.length === 0 ? (
+                <TouchableOpacity style={styles.emptyState} onPress={() => setAddBillVisible(true)}>
+                  <Text style={styles.emptyStateText}>No bills yet — tap + to add one</Text>
+                </TouchableOpacity>
+              ) : (
+                <>
+                  {!billsCollapsed && viewMode === 'list' && (
+                    <View style={styles.billsList}>
+                      {sortedBills.map(bill => (
+                        <BillRowList key={bill.id} bill={bill} onPress={() => navToBill(bill.id)} />
+                      ))}
+                    </View>
+                  )}
+                  {!billsCollapsed && viewMode === 'grid' && (
+                    <View style={styles.billsGrid}>
+                      {sortedBills.map(bill => (
+                        <BillCardGrid key={bill.id} bill={bill} onPress={() => navToBill(bill.id)} />
+                      ))}
+                    </View>
+                  )}
+                  {!billsCollapsed && viewMode === 'compact' && (
+                    <View style={styles.billsCompact}>
+                      {sortedBills.map(bill => (
+                        <BillRowCompact key={bill.id} bill={bill} onPress={() => navToBill(bill.id)} />
+                      ))}
+                    </View>
+                  )}
+                </>
+              )}
+            </View>
 
             {/* Cards Section Header */}
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Your cards</Text>
-              <TouchableOpacity onPress={() => {}}>
-                <Text style={styles.seeAll}>See all</Text>
+              <TouchableOpacity onPress={() => setAddCardVisible(true)}>
+                <Text style={styles.addCardBtn}>+ Add Card</Text>
               </TouchableOpacity>
             </View>
           </>
         }
+        ListEmptyComponent={
+          <TouchableOpacity style={styles.emptyCardsState} onPress={() => setAddCardVisible(true)}>
+            <Text style={styles.emptyCardsText}>No cards yet</Text>
+            <Text style={styles.emptyCardsHint}>Tap to add your first 0% promo card</Text>
+          </TouchableOpacity>
+        }
         ListFooterComponent={<View style={{ height: 24 }} />}
       />
+
+      <AddCardModal visible={addCardVisible} onClose={() => setAddCardVisible(false)} />
+      <AddBillModal visible={addBillVisible} onClose={() => setAddBillVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -369,5 +391,35 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   sectionTitle: { ...Typography.sectionHeader, color: Colors.textPrimary },
-  seeAll: { ...Typography.body, color: Colors.accentBlue },
+  addCardBtn: { fontSize: 15, color: Colors.accentBlue, fontWeight: '600' },
+
+  // Add button in bills header
+  addBtn: {
+    backgroundColor: Colors.accentBlue,
+    borderRadius: 14,
+    width: 28,
+    height: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addBtnText: { fontSize: 20, color: Colors.textPrimary, lineHeight: 26 },
+
+  // Empty states
+  emptyState: {
+    backgroundColor: Colors.bgCard,
+    borderRadius: 14,
+    paddingVertical: 18,
+    alignItems: 'center',
+  },
+  emptyStateText: { fontSize: 14, color: Colors.textSecondary },
+  emptyCardsState: {
+    marginHorizontal: 16,
+    backgroundColor: Colors.bgCard,
+    borderRadius: 16,
+    paddingVertical: 32,
+    alignItems: 'center',
+    gap: 6,
+  },
+  emptyCardsText: { fontSize: 16, fontWeight: '600', color: Colors.textPrimary },
+  emptyCardsHint: { fontSize: 13, color: Colors.textSecondary },
 });
