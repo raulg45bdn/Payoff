@@ -94,6 +94,8 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
+            SWIFT_VERSION=5.0 \
+            SWIFT_STRICT_CONCURRENCY=minimal \
             | xcpretty
 
       - name: Package into IPA
