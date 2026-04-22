@@ -45,6 +45,25 @@ jobs:
         env:
           EXPO_NO_TELEMETRY: 1
 
+      - name: Show and patch AppDelegate.swift
+        run: |
+          python3 - <<'PYEOF'
+          with open('ios/PayOff/AppDelegate.swift', 'r') as f:
+              content = f.read()
+          print('=== AppDelegate.swift (before patch) ===')
+          print(content)
+          print('=== end ===')
+          # ExpoAppDelegate lives in the Expo Swift module, not ExpoModulesCore.
+          # Ensure it is importable from the app target.
+          if 'import Expo\n' not in content and 'ExpoAppDelegate' in content:
+              content = 'import Expo\n' + content
+              with open('ios/PayOff/AppDelegate.swift', 'w') as f:
+                  f.write(content)
+              print('Patched AppDelegate.swift: prepended import Expo')
+          else:
+              print('AppDelegate.swift needs no import patch')
+          PYEOF
+
       - name: Patch Podfile — inject Swift 5 into existing post_install
         run: |
           python3 - <<'PYEOF'
@@ -96,7 +115,13 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             SWIFT_VERSION=5.0 \
             SWIFT_STRICT_CONCURRENCY=minimal \
-            | xcpretty
+            2>&1 | tee /tmp/xcodebuild.log | xcpretty
+
+      - name: Show raw errors on failure
+        if: failure()
+        run: |
+          echo "=== Raw xcodebuild errors ==="
+          grep ": error:" /tmp/xcodebuild.log | head -50 || echo "(no error lines found)"
 
       - name: Package into IPA
         run: |
