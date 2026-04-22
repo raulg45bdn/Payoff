@@ -25,10 +25,24 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
-      - name: Expo prebuild (generate ios/ folder)
-        run: npx expo prebuild --platform ios --clean
+      - name: Expo prebuild (generate ios/ folder, skip pod install)
+        run: npx expo prebuild --platform ios --clean --no-install
         env:
           EXPO_NO_TELEMETRY: 1
+
+      - name: Patch Podfile — force Swift 5 on all pod targets
+        run: |
+          cat >> ios/Podfile << 'EOF'
+
+          post_install do |installer|
+            installer.pods_project.targets.each do |target|
+              target.build_configurations.each do |config|
+                config.build_settings['SWIFT_VERSION'] = '5.0'
+                config.build_settings['SWIFT_STRICT_CONCURRENCY'] = 'minimal'
+              end
+            end
+          end
+          EOF
 
       - name: Cache CocoaPods
         uses: actions/cache@v4
@@ -40,19 +54,22 @@ jobs:
       - name: Install CocoaPods
         run: pod install --project-directory=ios
 
+      - name: Install xcpretty
+        run: gem install xcpretty --no-document
+
       - name: Build iOS archive (unsigned)
         run: |
-          xcodebuild archive \
+          set -o pipefail && xcodebuild archive \
             -workspace ios/PayOff.xcworkspace \
             -scheme PayOff \
             -sdk iphoneos \
             -configuration Release \
+            -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/PayOff.xcarchive" \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
-            SWIFT_VERSION=5 \
-            SWIFT_STRICT_CONCURRENCY=minimal
+            | xcpretty
 
       - name: Package into IPA
         run: |
