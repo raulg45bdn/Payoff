@@ -4,7 +4,7 @@ import { useApp } from '../context/AppContext';
 import { Colors, Typography } from '../theme';
 
 export default function WelcomeScreen() {
-  const { factoryReset } = useApp();
+  const { factoryReset, startFresh } = useApp();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -52,10 +52,14 @@ export default function WelcomeScreen() {
 
         <Text style={styles.orText}>— or —</Text>
 
-        <Text style={styles.hintText}>
-          Add your own cards and bills using the Dashboard once you're ready.
-          Your data never leaves this device.
-        </Text>
+        <TouchableOpacity
+          style={styles.secondaryBtn}
+          onPress={startFresh}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.secondaryBtnText}>Start fresh with my own data</Text>
+          <Text style={styles.secondaryBtnSub}>Skip demo — go straight to blank dashboard</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -137,10 +141,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.textSecondary,
   },
-  hintText: {
+  secondaryBtn: {
+    width: '100%',
+    backgroundColor: Colors.bgCard,
+    borderRadius: 16,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  secondaryBtnText: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: Colors.textPrimary,
+  },
+  secondaryBtnSub: {
     fontSize: 13,
     color: Colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
+    marginTop: 3,
   },
 });
