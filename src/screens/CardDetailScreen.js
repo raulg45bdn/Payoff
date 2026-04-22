@@ -27,7 +27,7 @@ import { Colors, Typography } from '../theme';
 
 export default function CardDetailScreen({ route, navigation }) {
   const { cardId } = route.params;
-  const { cards, updateCard } = useApp();
+  const { cards, updateCard, removeCard } = useApp();
   const [modalVisible, setModalVisible] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -84,6 +84,24 @@ export default function CardDetailScreen({ route, navigation }) {
 
   function handleMonthlyReminderToggle(enabled) {
     saveCard({ ...card, monthlyReminderEnabled: enabled });
+  }
+
+  function handleDelete() {
+    Alert.alert(
+      `Delete ${card?.name}?`,
+      'This will remove the card and all its history. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            removeCard(card.id);
+            navigation.goBack();
+          },
+        },
+      ]
+    );
   }
 
   function handleMonthlyDaysBefore() {
@@ -375,6 +393,10 @@ export default function CardDetailScreen({ route, navigation }) {
           <Text style={styles.updateBtnText}>Update Balance</Text>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.85}>
+          <Text style={styles.deleteBtnText}>Delete Card</Text>
+        </TouchableOpacity>
+
         <View style={{ height: 32 }} />
       </ScrollView>
 
@@ -538,12 +560,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
+    marginBottom: 10,
   },
   updateBtnText: {
     fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  deleteBtn: {
+    marginHorizontal: 16,
+    height: 52,
+    backgroundColor: 'rgba(255,69,58,0.12)',
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteBtnText: { fontSize: 17, fontWeight: '500', color: Colors.urgentRed },
 
   // Not-found fallback
   notFound: {

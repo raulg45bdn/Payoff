@@ -1,10 +1,21 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../context/AppContext';
 import { Colors, Typography } from '../theme';
 
 export default function WelcomeScreen() {
   const { factoryReset, startFresh } = useApp();
+
+  function handleStartFresh() {
+    Alert.alert(
+      'Start fresh?',
+      'This will clear all demo data. You can add your own cards and bills from the dashboard.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Start Fresh', style: 'destructive', onPress: startFresh },
+      ]
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
@@ -54,7 +65,7 @@ export default function WelcomeScreen() {
 
         <TouchableOpacity
           style={styles.secondaryBtn}
-          onPress={startFresh}
+          onPress={handleStartFresh}
           activeOpacity={0.85}
         >
           <Text style={styles.secondaryBtnText}>Start fresh with my own data</Text>
