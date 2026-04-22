@@ -25,6 +25,21 @@ jobs:
       - name: Install JS dependencies
         run: npm ci
 
+      - name: Patch expo-file-system — fix missing ExpoAppDelegate
+        run: |
+          python3 - <<'PYEOF'
+          filepath = 'node_modules/expo-file-system/ios/FileSystemModule.swift'
+          with open(filepath, 'r') as f:
+              content = f.read()
+          content = content.replace(
+              'ExpoAppDelegate.getSubscriberOfType(FileSystemBackgroundSessionHandler.self)',
+              'nil'
+          )
+          with open(filepath, 'w') as f:
+              f.write(content)
+          print('Patched FileSystemModule.swift OK')
+          PYEOF
+
       - name: Expo prebuild (generate ios/ folder, skip pod install)
         run: npx expo prebuild --platform ios --clean --no-install
         env:
